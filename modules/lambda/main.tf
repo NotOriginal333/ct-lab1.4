@@ -65,7 +65,7 @@ module "lambda_get_all_authors" {
   source_path = "${path.module}/src/get-all-authors"
 
   environment_variables = {
-    TABLE_NAME = var.authors_table
+    TABLE_AUTHORS = var.authors_table
   }
   attach_policy_statements = true
 
@@ -91,7 +91,7 @@ module "lambda_get_all_courses" {
   source_path = "${path.module}/src/get-all-courses"
 
   environment_variables = {
-    TABLE_NAME = var.courses_table
+    TABLE_COURSES = var.courses_table
   }
   attach_policy_statements = true
 
@@ -117,7 +117,7 @@ module "lambda_get_course" {
   source_path = "${path.module}/src/get-course"
 
   environment_variables = {
-    TABLE_NAME = var.courses_table
+    TABLE_COURSES = var.courses_table
   }
   attach_policy_statements = true
 
