@@ -8,26 +8,6 @@ module "label_api" {
 
 
 resource "aws_api_gateway_rest_api" "this" {
-  #   body = jsonencode({
-  #     openapi = "3.0.1"
-  #     info = {
-  #       title   = "example"
-  #       version = "1.0"
-  #     }
-  #     paths = {
-  #       "/path1" = {
-  #         get = {
-  #           x-amazon-apigateway-integration = {
-  #             httpMethod           = "GET"
-  #             payloadFormatVersion = "1.0"
-  #             type                 = "HTTP_PROXY"
-  #             uri                  = "https://ip-ranges.amazonaws.com/ip-ranges.json"
-  #           }
-  #         }
-  #       }
-  #     }
-  #   })
-
   name        = module.label_api.id
   description = "API Gateway"
 
@@ -47,47 +27,16 @@ resource "aws_api_gateway_resource" "courses" {
   path_part   = "courses"
 }
 
-# OPTIONS (CORS Preflight)
-resource "aws_api_gateway_method" "courses_options" {
-  rest_api_id   = aws_api_gateway_rest_api.this.id
-  resource_id   = aws_api_gateway_resource.courses.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
 
-resource "aws_api_gateway_integration" "courses_options_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.courses.id
-  http_method             = aws_api_gateway_method.courses_options.http_method
-  type                    = "MOCK"
-  request_templates       = { "application/json" = "{\"statusCode\": 200}" }
-}
+module "cors_courses" {
+  source          = "squidfunk/api-gateway-enable-cors/aws"
+  version         = "0.3.3"
+  api_id          = aws_api_gateway_rest_api.this.id
+  api_resource_id = aws_api_gateway_resource.courses.id
 
-resource "aws_api_gateway_integration_response" "courses_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.courses_options.http_method
-  status_code = "200"
-  selection_pattern = ""
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin" = "'*'" 
-  }
-}
-
-resource "aws_api_gateway_method_response" "courses_options_method_response" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.courses_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
+  allow_methods = ["GET", "POST", "OPTIONS"]
+  allow_headers = ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key"]
+  allow_origin  = "*"
 }
 
 # GET /courses
@@ -204,47 +153,15 @@ resource "aws_api_gateway_resource" "course_id" {
   path_part   = "{id}"
 }
 
-# OPTIONS for /courses/{id}
-resource "aws_api_gateway_method" "course_id_options" {
-  rest_api_id   = aws_api_gateway_rest_api.this.id
-  resource_id   = aws_api_gateway_resource.course_id.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
+module "cors_course_id" {
+  source          = "squidfunk/api-gateway-enable-cors/aws"
+  version         = "0.3.3"
+  api_id          = aws_api_gateway_rest_api.this.id
+  api_resource_id = aws_api_gateway_resource.course_id.id
 
-resource "aws_api_gateway_integration" "course_id_options_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.course_id.id
-  http_method             = aws_api_gateway_method.course_id_options.http_method
-  type                    = "MOCK"
-  request_templates       = { "application/json" = "{\"statusCode\": 200}" }
-}
-
-resource "aws_api_gateway_integration_response" "course_id_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.course_id.id
-  http_method = aws_api_gateway_method.course_id_options.http_method
-  status_code = "200"
-  selection_pattern = ""
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-  }
-}
-
-resource "aws_api_gateway_method_response" "course_id_options_method_response" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.course_id.id
-  http_method = aws_api_gateway_method.course_id_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
+  allow_methods = ["GET", "PUT", "DELETE", "OPTIONS"]
+  allow_headers = ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key"]
+  allow_origin  = "*"
 }
 
 # GET /courses/{id}
@@ -429,48 +346,6 @@ resource "aws_api_gateway_resource" "authors" {
   rest_api_id = aws_api_gateway_rest_api.this.id
 }
 
-resource "aws_api_gateway_method" "authors_options" {
-  rest_api_id   = aws_api_gateway_rest_api.this.id
-  resource_id   = aws_api_gateway_resource.authors.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "authors_options_integration" {
-  rest_api_id       = aws_api_gateway_rest_api.this.id
-  resource_id       = aws_api_gateway_resource.authors.id
-  http_method       = aws_api_gateway_method.authors_options.http_method
-  type              = "MOCK"
-  request_templates = { "application/json" = "{\"statusCode\": 200}" }
-}
-
-resource "aws_api_gateway_integration_response" "authors_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.authors.id
-  http_method = aws_api_gateway_method.authors_options.http_method
-  status_code = "200"
-  selection_pattern = ""
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-  }
-}
-
-resource "aws_api_gateway_method_response" "authors_options_method_response" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.authors.id
-  http_method = aws_api_gateway_method.authors_options.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
-}
-
 resource "aws_api_gateway_method" "get_authors" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_resource.authors.id
@@ -522,6 +397,18 @@ resource "aws_api_gateway_method_response" "get_authors_method_response" {
   }
 }
 
+module "cors" {
+  source  = "squidfunk/api-gateway-enable-cors/aws"
+  version = "0.3.3"
+
+  api_id          = aws_api_gateway_rest_api.this.id
+  api_resource_id = aws_api_gateway_resource.authors.id
+
+  allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  allow_headers = ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key"]
+  allow_origin  = "*"
+}
+
 # Deployment & Stage
 resource "aws_api_gateway_deployment" "this" {
   depends_on = [
@@ -540,4 +427,33 @@ resource "aws_api_gateway_stage" "dev" {
   deployment_id = aws_api_gateway_deployment.this.id
   rest_api_id   = aws_api_gateway_rest_api.this.id
   stage_name    = "dev"
+}
+
+
+resource "aws_api_gateway_model" "post_course" {
+  rest_api_id  = aws_api_gateway_rest_api.this.id
+  name         = replace("${module.label_api.id}-PostCourse", "-", "")
+  description  = "a JSON schema"
+  content_type = "application/json"
+
+  schema = <<EOF
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "CourseInputModel",
+  "type": "object",
+  "properties": {
+    "title": {"type": "string"},
+    "authorId": {"type": "string"},
+    "length": {"type": "string"},
+    "category": {"type": "string"}
+  },
+  "required": ["title", "authorId", "length", "category"]
+}
+EOF
+}
+
+resource "aws_api_gateway_request_validator" "this" {
+  name                  = "validate_request_body"
+  rest_api_id           = aws_api_gateway_rest_api.this.id
+  validate_request_body = true
 }
